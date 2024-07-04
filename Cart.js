@@ -1,23 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Button } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 
 const Cart = ({ navigation }) => {
   const [cart, setCart] = useState([]);
-
+// Load giỏ hàng từ AsyncStorage khi màn hình Cart được focus
   useEffect(() => {
     const loadCart = async () => {
       try {
         const cartString = await AsyncStorage.getItem('cart');
         if (cartString) {
           let cartItems = JSON.parse(cartString);
-          // Remove duplicates based on item.id
+          // Loại bỏ các phần tử trùng lặp dựa trên item.id
           cartItems = cartItems.filter((item, index, self) =>
             index === self.findIndex((t) => (
               t.id === item.id
             ))
           );
+          // Đảm bảo tất cả các phần tử có giá trị giasp hợp lệ
+          cartItems = cartItems.map(item => ({
+            ...item,
+            giasp: item.giasp ?? 0 // Đặt giá trị mặc định là 0 nếu giá trị giasp bị undefined hoặc null
+          }));
           await AsyncStorage.setItem('cart', JSON.stringify(cartItems));
           setCart(cartItems);
         }
@@ -33,6 +38,10 @@ const Cart = ({ navigation }) => {
     return unsubscribe;
   }, [navigation]);
 
+  useEffect(() => {
+    navigation.setOptions({ title: 'Giỏ hàng' });
+  }, [navigation]);
+  // xóa sản phẩm bằng productid
   const removeFromCart = async (productId) => {
     try {
       const updatedCart = cart.filter(item => item.id !== productId);
@@ -43,7 +52,7 @@ const Cart = ({ navigation }) => {
       console.error("Lỗi khi xóa sản phẩm khỏi giỏ hàng:", error);
     }
   };
-
+  // nếu sản phẩm có trong giỏ hàng thì tăng lên, nếu chưa có thì thêm vào giỏ
   const addToCart = async (product) => {
     try {
       const existingProductIndex = cart.findIndex(item => item.id === product.id);
@@ -63,7 +72,9 @@ const Cart = ({ navigation }) => {
       console.error("Lỗi khi thêm sản phẩm vào giỏ hàng:", error);
     }
   };
+  
 
+ // giảm số lượng 
   const decreaseQuantity = async (productId) => {
     try {
       const updatedCart = cart.map(item => {
@@ -79,13 +90,35 @@ const Cart = ({ navigation }) => {
       console.error("Lỗi khi giảm số lượng sản phẩm:", error);
     }
   };
-
+  // định nghĩa giá tiền
   const formatPrice = (price) => {
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    if (price === undefined || price === null) {
+      return "0 ₫"; // hoặc giá trị mặc định mà bạn muốn hiển thị khi giá trị không hợp lệ
+    }
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " ₫";
+  };
+  // dùng reduce để tính tổng số tiền 
+  const getTotalPrice = () => {
+    return cart.reduce((total, item) => total + (item.giasp ?? 0) * item.quantity, 0);
   };
 
-  const getTotalPrice = () => {
-    return cart.reduce((total, item) => total + item.price * item.quantity, 0);
+  const handleCheckout = async () => {
+    const totalPrice = getTotalPrice();
+    // Điều hướng tới màn hình thanh toán
+    navigation.navigate('Payment', { cart, totalPrice });
+
+    // Giả sử thanh toán thành công, xóa giỏ hàng
+    await clearCart();
+  };
+
+  const clearCart = async () => {
+    try {
+      await AsyncStorage.removeItem('cart');
+      setCart([]);
+      console.log("Giỏ hàng đã được làm mới.");
+    } catch (error) {
+      console.error("Lỗi khi làm mới giỏ hàng:", error);
+    }
   };
 
   return (
@@ -93,10 +126,10 @@ const Cart = ({ navigation }) => {
       <ScrollView>
         {cart.map((item, index) => (
           <View key={item.id} style={styles.itemContainer}>
-            <Image source={{ uri: item.picture }} style={styles.itemImage} />
+            <Image source={{ uri: item.hinhanh }} style={styles.itemImage} />
             <View style={styles.itemInfo}>
-              <Text style={styles.itemName}>{item.name}</Text>
-              <Text style={styles.itemPrice}>{formatPrice(item.price)} ₫</Text>
+              <Text style={styles.itemName}>{item.tensanpham}</Text>
+              <Text style={styles.itemPrice}>{formatPrice(item.giasp)} </Text>
               <View style={styles.quantityContainer}>
                 <TouchableOpacity onPress={() => decreaseQuantity(item.id)}>
                   <Ionicons name="remove-circle-outline" size={24} color="black" />
@@ -113,8 +146,9 @@ const Cart = ({ navigation }) => {
           </View>
         ))}
         <View style={styles.totalContainer}>
-          <Text style={styles.totalText}>Tổng tiền: {formatPrice(getTotalPrice())} ₫</Text>
+          <Text style={styles.totalText}>Tổng tiền: {formatPrice(getTotalPrice())} </Text>
         </View>
+        <Button title="Thanh toán" onPress={handleCheckout} />
       </ScrollView>
     </View>
   );

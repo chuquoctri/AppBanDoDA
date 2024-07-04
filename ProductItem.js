@@ -3,16 +3,26 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 
 const ProductItem = ({ product, onPress }) => {
   const formatPrice = (price) => {
-    // Sử dụng hàm toLocaleString để định dạng giá tiền với dấu phẩy hàng nghìn
-    return price.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " ₫";
   };
+
+  const shortenName = (name) => {
+    return name.length > 20 ? name.substring(0, 17) + "..." : name;
+  };
+  
 
   return (
     <TouchableOpacity onPress={onPress}>
       <View style={styles.container}>
-        <Image source={{ uri: product.picture }} style={styles.image} />
-        <Text style={styles.price}>{formatPrice(product.price)}</Text>
-        <Text style={styles.name}>{product.name}</Text>
+        <View style={styles.imageContainer}>
+          <Image 
+            source={{ uri: product.hinhanh }} 
+            style={styles.image}
+            resizeMode="cover" // Chế độ thay đổi kích thước hình ảnh
+          />
+        </View>
+        <Text style={styles.price}>{formatPrice(product.giasp)}</Text>
+        <Text style={styles.name}>{shortenName(product.tensanpham)}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -20,26 +30,40 @@ const ProductItem = ({ product, onPress }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginLeft:10,
+    height:300,
+    width:234,
+    marginLeft: 18,
     marginTop: 30,
     margin: 10,
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 5,
+    backgroundColor:'#e5dce8'
+  },
+  imageContainer: {
+    width: 180,
+    height: 200,
+    overflow: "hidden", // Đảm bảo hình ảnh không vượt quá kích thước container
   },
   image: {
-    width: 130,
-    height: 130,
-    marginLeft:10,
+    width: "100%",
+    height: "100%",
+    marginTop:10,
   },
   price: {
-    backgroundColor:'#ebb134',
+    backgroundColor: '#ebb134',
     fontSize: 13,
     fontWeight: "bold",
-    marginLeft:10,
-    marginTop: 3,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    marginTop:10,
   },
-  name:{
+  name: {
     fontSize: 13,
     fontWeight: "bold",
+    marginTop:10,
+    paddingHorizontal: 10,
   }
 });
 

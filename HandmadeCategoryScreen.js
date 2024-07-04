@@ -1,3 +1,5 @@
+// HandmadeCategoryScreen.js
+
 import React, { useEffect, useState } from "react";
 import { View, FlatList, ActivityIndicator, StyleSheet, Text } from "react-native";
 import axios from "axios";
@@ -7,7 +9,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const numColumns = 2;
 
-const MenCategoryScreen = () => {
+const HandmadeCategoryScreen = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
@@ -15,13 +17,13 @@ const MenCategoryScreen = () => {
   useEffect(() => {
     fetchProducts();
     navigation.setOptions({
-      headerTitle: "Đồ Da Nam",
+      headerTitle: "Đồ Handmade",
     });
   }, []);
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get("https://chuquoctri2310.000webhostapp.com/DoAn/getdodanam.php");
+      const response = await axios.get("https://chuquoctri2310.000webhostapp.com/DoAn/gethandmade.php");
       setProducts(response.data.result);
       setLoading(false);
     } catch (error) {
@@ -50,7 +52,7 @@ const MenCategoryScreen = () => {
     <View style={{ flex: 1 }}>
       <View style={styles.breadcrumbContainer}>
         <Ionicons name="home" style={styles.iconBread} />
-        <Text style={styles.breadcrumbText}> Lano / Trang chủ / Đồ da nam</Text>
+        <Text style={styles.breadcrumbText}> Lano / Trang chủ / Đồ Handmade</Text>
       </View>
       <FlatList
         data={products}
@@ -80,12 +82,10 @@ const styles = StyleSheet.create({
   iconBread: {
     fontSize: 20,
     marginRight: 5,
-   
   },
   breadcrumbText: {
     fontSize: 16,
     color: '#333',
-
   },
   productList: {
     paddingHorizontal: 10,
@@ -105,10 +105,10 @@ const styles = StyleSheet.create({
     
   },
   iconBread: {
-    marginLeft: 150,
+    marginLeft: 140,
     paddingBottom: 8,
     fontSize: 16,
   },
 });
 
-export default MenCategoryScreen;
+export default HandmadeCategoryScreen;
